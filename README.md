@@ -28,31 +28,28 @@ NetGuard is a multi-threaded network reconnaissance tool developed in Python. It
     pip install -r requirements.txt
     ```
 
-    ### Quick start (Windows PowerShell)
+### 3.3 Quick Start (Windows PowerShell)
 
-    1. Create the virtual environment and install dependencies:
-
+1.  Create the virtual environment and install dependencies:
     ```powershell
     .\setup_env.ps1
     ```
 
-    2. Activate the venv:
-
+2.  Activate the virtual environment:
     ```powershell
     .\.venv\Scripts\Activate.ps1
     ```
 
-    3. Run the scanner:
-
+3.  Run the scanner:
     ```powershell
     python scanner.py <TARGET_IP_ADDRESS>
     # Example:
     python scanner.py 127.0.0.1
     ```
 
-    Notes:
-    - The PDF report is always saved as `netguard_last_scan.pdf` and will be overwritten on each run.
-    - If VS Code's Pylance still flags imports, set the interpreter to `./.venv/Scripts/python.exe` (Command Palette → `Python: Select Interpreter`).
+**Notes:**
+* The PDF report is always saved as `netguard_last_scan.pdf` and will be overwritten on each run.
+* If VS Code's Pylance still flags imports, set the interpreter to `./.venv/Scripts/python.exe` (Command Palette > Python: Select Interpreter).
 
 ## 4.0 Usage Guide
 
