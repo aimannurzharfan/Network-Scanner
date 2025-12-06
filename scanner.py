@@ -11,7 +11,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
-from fpdf import FPDF
+from fpdf import FPDF, XPos, YPos
 from colorama import init, Fore, Style
 
 # Initialize colorama for Windows compatibility
@@ -40,15 +40,15 @@ class PDFReport(FPDF):
     
     def header(self):
         """PDF header with title"""
-        self.set_font('Arial', 'B', 16)
-        self.cell(0, 10, 'NetGuard Network Scan Report', 0, 1, 'C')
+        self.set_font('Helvetica', 'B', 16)
+        self.cell(0, 10, 'NetGuard Network Scan Report', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='C')
         self.ln(5)
     
     def footer(self):
         """PDF footer with page number"""
         self.set_y(-15)
-        self.set_font('Arial', 'I', 8)
-        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
+        self.set_font('Helvetica', 'I', 8)
+        self.cell(0, 10, f'Page {self.page_no()}', border=0, new_x=XPos.RIGHT, new_y=YPos.TOP, align='C')
 
 
 def scan_port(ip, port, timeout=1.0):
@@ -170,7 +170,7 @@ def print_result(port, status, banner=None):
         print(f"{Fore.RED}[-] Port {port} - Error occurred{Style.RESET_ALL}")
 
 
-def generate_pdf_report(target_ip, start_time, open_ports_data, filename='netguard_scan_report.pdf'):
+def generate_pdf_report(target_ip, start_time, open_ports_data, filename='netguard_last_scan.pdf'):
     """
     Generate a PDF report of the scan results.
     
@@ -185,46 +185,46 @@ def generate_pdf_report(target_ip, start_time, open_ports_data, filename='netgua
         pdf.add_page()
         
         # Report metadata
-        pdf.set_font('Arial', 'B', 12)
-        pdf.cell(0, 10, 'Scan Information', 0, 1, 'L')
-        pdf.set_font('Arial', '', 10)
-        pdf.cell(0, 8, f'Target IP: {target_ip}', 0, 1, 'L')
-        pdf.cell(0, 8, f'Start Time: {start_time.strftime("%Y-%m-%d %H:%M:%S")}', 0, 1, 'L')
-        pdf.cell(0, 8, f'End Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', 0, 1, 'L')
-        pdf.cell(0, 8, f'Total Ports Scanned: {len(COMMON_PORTS)}', 0, 1, 'L')
-        pdf.cell(0, 8, f'Open Ports Found: {len(open_ports_data)}', 0, 1, 'L')
+        pdf.set_font('Helvetica', 'B', 12)
+        pdf.cell(0, 10, 'Scan Information', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
+        pdf.set_font('Helvetica', '', 10)
+        pdf.cell(0, 8, f'Target IP: {target_ip}', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
+        pdf.cell(0, 8, f'Start Time: {start_time.strftime("%Y-%m-%d %H:%M:%S")}', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
+        pdf.cell(0, 8, f'End Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
+        pdf.cell(0, 8, f'Total Ports Scanned: {len(COMMON_PORTS)}', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
+        pdf.cell(0, 8, f'Open Ports Found: {len(open_ports_data)}', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
         pdf.ln(10)
         
         # Open ports table
         if open_ports_data:
-            pdf.set_font('Arial', 'B', 12)
-            pdf.cell(0, 10, 'Open Ports and Banners', 0, 1, 'L')
+            pdf.set_font('Helvetica', 'B', 12)
+            pdf.cell(0, 10, 'Open Ports and Banners', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
             pdf.ln(5)
             
             # Table header
-            pdf.set_font('Arial', 'B', 10)
-            pdf.cell(30, 8, 'Port', 1, 0, 'C')
-            pdf.cell(160, 8, 'Banner/Service', 1, 1, 'C')
+            pdf.set_font('Helvetica', 'B', 10)
+            pdf.cell(30, 8, 'Port', border=1, new_x=XPos.RIGHT, new_y=YPos.TOP, align='C')
+            pdf.cell(160, 8, 'Banner/Service', border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='C')
             
             # Table rows
-            pdf.set_font('Arial', '', 9)
+            pdf.set_font('Helvetica', '', 9)
             for port, banner in open_ports_data:
-                pdf.cell(30, 8, str(port), 1, 0, 'C')
+                pdf.cell(30, 8, str(port), border=1, new_x=XPos.RIGHT, new_y=YPos.TOP, align='C')
                 banner_text = banner if banner else 'No banner received'
                 # Handle long banners by wrapping text
                 if len(banner_text) > 60:
                     banner_text = banner_text[:60] + '...'
-                pdf.cell(160, 8, banner_text, 1, 1, 'L')
+                pdf.cell(160, 8, banner_text, border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
         else:
-            pdf.set_font('Arial', '', 10)
-            pdf.cell(0, 10, 'No open ports found.', 0, 1, 'L')
+            pdf.set_font('Helvetica', '', 10)
+            pdf.cell(0, 10, 'No open ports found.', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
         
         # Footer note
         pdf.ln(10)
-        pdf.set_font('Arial', 'I', 8)
-        pdf.cell(0, 10, 'Generated by NetGuard Network Scanner - For authorized use only', 0, 1, 'C')
+        pdf.set_font('Helvetica', 'I', 8)
+        pdf.cell(0, 10, 'Generated by NetGuard Network Scanner - For authorized use only', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='C')
         
-        # Save PDF
+        # Save PDF (always overwrite the same filename)
         pdf.output(filename)
         print(f"\n{Fore.GREEN}[+] PDF report generated: {filename}{Style.RESET_ALL}")
         
@@ -318,7 +318,8 @@ def main():
         # Generate partial report if any ports were found
         if open_ports:
             open_ports.sort(key=lambda x: x[0])
-            generate_pdf_report(target_ip, start_time, open_ports, 'netguard_scan_report_partial.pdf')
+            # Always save the partial/interrupt report to the same filename so it overwrites
+            generate_pdf_report(target_ip, start_time, open_ports)
         
         sys.exit(0)
     except Exception as e:
