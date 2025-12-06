@@ -1,0 +1,18 @@
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+
+# Ignore Virtual Environment folders
+venv/
+.venv/
+env/
+
+# Ignore the Generated PDF Reports (Privacy)
+*.pdf
+netguard_scan_report.pdf
+netguard_scan_report_partial.pdf
+
+# Ignore IDE settings (VS Code / PyCharm)
+.vscode/
+.idea/
+
