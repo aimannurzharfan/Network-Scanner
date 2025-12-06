@@ -57,7 +57,8 @@ To execute a scan, run the script from the command line interface (CLI) with the
 
 **Command Syntax:**
 ```bash
-
+python scanner.py <TARGET_IP_ADDRESS>
+```
 ## 5.0 Video Demonstration
 A comprehensive walkthrough of the tool's functionality, including a safe localhost scan and report generation, can be viewed below.
 
