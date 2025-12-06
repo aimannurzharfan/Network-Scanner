@@ -57,4 +57,15 @@ To execute a scan, run the script from the command line interface (CLI) with the
 
 **Command Syntax:**
 ```bash
+
+## 5.0 Video Demonstration
+A comprehensive walkthrough of the tool's functionality, including a safe localhost scan and report generation, can be viewed below.
+
+* **YouTube Demonstration:** [Watch Video Demo](https://youtu.be/vQmuTjyilvs)
+* **Local Video File:** `demo.mp4` (Located in the root directory)
+
+## 6.0 Documentation
+For a detailed technical breakdown, architectural diagrams, and code explanation, please refer to the full system documentation located in the `docs` folder.
+
+* **Full Documentation:** [`docs/netguard_docs.pdf`](docs/netguard_docs.pdf)
 python scanner.py <TARGET_IP_ADDRESS>
