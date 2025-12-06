@@ -67,6 +67,3 @@ A comprehensive walkthrough of the tool's functionality, including a safe localh
 
 ## 6.0 Documentation
 For a detailed technical breakdown, architectural diagrams, and code explanation, please refer to the full system documentation located in the `docs` folder.
-
-* **Full Documentation:** [`docs/netguard_docs.pdf`](docs/netguard_docs.pdf)
-python scanner.py <TARGET_IP_ADDRESS>
