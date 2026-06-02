@@ -19,7 +19,7 @@ NetGuard is a multi-threaded network reconnaissance tool developed in Python. It
 ### 3.2 Setup Instructions
 1.  Clone the repository to your local machine:
     ```bash
-    git clone [https://github.com/aimannurzharfan/Network-Scanner.git](https://github.com/aimannurzharfan/Network-Scanner.git)
+    git clone https://github.com/aimannurzharfan/Network-Scanner.git
     cd Network-Scanner
     ```
 
