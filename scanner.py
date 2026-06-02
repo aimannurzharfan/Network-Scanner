@@ -5,10 +5,10 @@ A comprehensive network port scanner with banner grabbing and PDF reporting.
 For educational purposes and authorized security audits only.
 """
 
+import argparse
 import socket
 import sys
 import threading
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from fpdf import FPDF, XPos, YPos
@@ -27,6 +27,33 @@ COMMON_PORTS = [
 
 # Remove duplicates and sort
 COMMON_PORTS = sorted(list(set(COMMON_PORTS)))
+
+
+def parse_ports(spec):
+    """Turn a --ports value into a sorted list of ints.
+    Accepts: 'common', 'all', a range like '1-65535', or a CSV like '22,80,443'."""
+    if spec in (None, '', 'common'):
+        return COMMON_PORTS
+    if spec == 'all':
+        return list(range(1, 65536))
+    ports = set()
+    for part in spec.split(','):
+        part = part.strip()
+        if '-' in part:
+            lo, hi = part.split('-', 1)
+            ports.update(range(int(lo), int(hi) + 1))
+        elif part:
+            ports.add(int(part))
+    return sorted(p for p in ports if 1 <= p <= 65535)
+
+
+def resolve_target(target):
+    """Accept an IP or a hostname; return a usable IPv4 address or exit."""
+    try:
+        return socket.gethostbyname(target)
+    except socket.error:
+        print(f"{Fore.RED}[-] Could not resolve target: {target}{Style.RESET_ALL}")
+        sys.exit(1)
 
 # Global variables for results and synchronization
 open_ports = []
@@ -170,7 +197,7 @@ def print_result(port, status, banner=None):
         print(f"{Fore.RED}[-] Port {port} - Error occurred{Style.RESET_ALL}")
 
 
-def generate_pdf_report(target_ip, start_time, open_ports_data, filename='netguard_last_scan.pdf'):
+def generate_pdf_report(target_ip, start_time, open_ports_data, total_scanned=len(COMMON_PORTS), filename='netguard_last_scan.pdf'):
     """
     Generate a PDF report of the scan results.
     
@@ -191,7 +218,7 @@ def generate_pdf_report(target_ip, start_time, open_ports_data, filename='netgua
         pdf.cell(0, 8, f'Target IP: {target_ip}', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
         pdf.cell(0, 8, f'Start Time: {start_time.strftime("%Y-%m-%d %H:%M:%S")}', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
         pdf.cell(0, 8, f'End Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
-        pdf.cell(0, 8, f'Total Ports Scanned: {len(COMMON_PORTS)}', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
+        pdf.cell(0, 8, f'Total Ports Scanned: {total_scanned}', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
         pdf.cell(0, 8, f'Open Ports Found: {len(open_ports_data)}', border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
         pdf.ln(10)
         
@@ -236,27 +263,26 @@ def main():
     """Main function to orchestrate the network scan"""
     global target_ip, start_time, open_ports
     
-    # Check command-line arguments
-    if len(sys.argv) != 2:
-        print(f"{Fore.RED}[-] Usage: python scanner.py <target_ip>{Style.RESET_ALL}")
-        print(f"{Fore.YELLOW}Example: python scanner.py 192.168.1.1{Style.RESET_ALL}")
-        sys.exit(1)
-    
-    target_ip = sys.argv[1]
+    parser = argparse.ArgumentParser(
+        description="NetGuard - multi-threaded TCP port scanner with banner grabbing and PDF reporting.")
+    parser.add_argument("target", help="Target IP address or hostname")
+    parser.add_argument("-p", "--ports", default="common",
+                        help="Ports to scan: 'common' (default), 'all' (1-65535), "
+                             "a range like 1-1024, or a CSV like 22,80,443")
+    parser.add_argument("-w", "--workers", type=int, default=100,
+                        help="Number of concurrent worker threads (default: 100)")
+    args = parser.parse_args()
+
+    target_ip = resolve_target(args.target)
+    ports_to_scan = parse_ports(args.ports)
+    max_workers = args.workers
     start_time = datetime.now()
-    
-    # Validate IP address format (basic validation)
-    try:
-        socket.inet_aton(target_ip)
-    except socket.error:
-        print(f"{Fore.RED}[-] Invalid IP address format: {target_ip}{Style.RESET_ALL}")
-        sys.exit(1)
     
     print(f"{Fore.CYAN}{'='*60}{Style.RESET_ALL}")
     print(f"{Fore.CYAN}NetGuard Network Scanner{Style.RESET_ALL}")
     print(f"{Fore.CYAN}{'='*60}{Style.RESET_ALL}")
     print(f"{Fore.YELLOW}Target IP: {target_ip}{Style.RESET_ALL}")
-    print(f"{Fore.YELLOW}Scanning {len(COMMON_PORTS)} common ports...{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}Scanning {len(ports_to_scan)} ports...{Style.RESET_ALL}")
     print(f"{Fore.YELLOW}Start Time: {start_time.strftime('%Y-%m-%d %H:%M:%S')}{Style.RESET_ALL}")
     print(f"{Fore.CYAN}{'='*60}{Style.RESET_ALL}\n")
     
@@ -265,14 +291,12 @@ def main():
         # ThreadPoolExecutor manages a pool of worker threads
         # max_workers controls the number of concurrent connections
         # Too many threads can overwhelm the network or target host
-        max_workers = 100  # Adjust based on your needs
-        
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all port scan tasks to the thread pool
             # Each task scans one port independently
             future_to_port = {
                 executor.submit(scan_port, target_ip, port): port 
-                for port in COMMON_PORTS
+                for port in ports_to_scan
             }
             
             # Process completed tasks as they finish
@@ -306,7 +330,7 @@ def main():
         if open_ports:
             # Sort open ports by port number
             open_ports.sort(key=lambda x: x[0])
-            generate_pdf_report(target_ip, start_time, open_ports)
+            generate_pdf_report(target_ip, start_time, open_ports, total_scanned=len(ports_to_scan))
         else:
             print(f"{Fore.YELLOW}[!] No open ports found. PDF report not generated.{Style.RESET_ALL}")
         
@@ -319,7 +343,7 @@ def main():
         if open_ports:
             open_ports.sort(key=lambda x: x[0])
             # Always save the partial/interrupt report to the same filename so it overwrites
-            generate_pdf_report(target_ip, start_time, open_ports)
+            generate_pdf_report(target_ip, start_time, open_ports, total_scanned=len(ports_to_scan))
         
         sys.exit(0)
     except Exception as e:
@@ -329,4 +353,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
